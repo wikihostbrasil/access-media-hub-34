@@ -59,7 +59,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $file = $_FILES['file'];
     $title = $_POST['title'] ?? '';
     $description = $_POST['description'] ?? '';
+    $startDate = !empty($_POST['start_date']) ? $_POST['start_date'] : null;
+    $endDate = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
+    $isPermanent = isset($_POST['is_permanent']) && $_POST['is_permanent'] === '1';
     $permissions = json_decode($_POST['permissions'] ?? '[]', true);
+
+    // If permanent, clear dates
+    if ($isPermanent) {
+        $startDate = null;
+        $endDate = null;
+    }
+
+    // Validate dates if provided
+    if ($startDate && $endDate && strtotime($startDate) > strtotime($endDate)) {
+        http_response_code(400);
+        echo json_encode(array("error" => "Data de início deve ser anterior à data de fim"));
+        exit();
+    }
 
     if (empty($title)) {
         http_response_code(400);
@@ -85,8 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $file_id = bin2hex(random_bytes(16));
             $file_url = 'uploads/' . $file_name;
             
-            $query = "INSERT INTO files (id, title, description, file_url, file_type, file_size, uploaded_by, created_at) 
-                      VALUES (:id, :title, :description, :file_url, :file_type, :file_size, :uploaded_by, NOW())";
+            $query = "INSERT INTO files (id, title, description, file_url, file_type, file_size, uploaded_by, start_date, end_date, is_permanent, created_at) 
+                      VALUES (:id, :title, :description, :file_url, :file_type, :file_size, :uploaded_by, :start_date, :end_date, :is_permanent, NOW())";
             $stmt = $db->prepare($query);
             $stmt->bindParam(":id", $file_id);
             $stmt->bindParam(":title", $title);
@@ -95,6 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindParam(":file_type", $file['type']);
             $stmt->bindParam(":file_size", $file['size']);
             $stmt->bindParam(":uploaded_by", $user_id);
+            $stmt->bindParam(":start_date", $startDate);
+            $stmt->bindParam(":end_date", $endDate);
+            $stmt->bindValue(":is_permanent", $isPermanent ? 1 : 0);
             $stmt->execute();
 
             // Insert permissions

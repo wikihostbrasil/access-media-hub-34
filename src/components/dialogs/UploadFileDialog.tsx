@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Upload, X, FileIcon } from "lucide-react";
+import { Upload, X, FileIcon, Calendar } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useUploadFile } from "@/hooks/useApiFiles";
 import { CategorySearchSelect } from "@/components/CategorySearchSelect";
 import { GroupSearchSelect } from "@/components/GroupSearchSelect";
@@ -24,6 +25,9 @@ export const UploadFileDialog = ({ open, onOpenChange }: UploadFileDialogProps) 
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [isPermanent, setIsPermanent] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
   const uploadFile = useUploadFile();
@@ -65,6 +69,9 @@ export const UploadFileDialog = ({ open, onOpenChange }: UploadFileDialogProps) 
     formData.append('file', file);
     formData.append('title', title.trim());
     formData.append('description', description.trim());
+    formData.append('start_date', startDate);
+    formData.append('end_date', endDate);
+    formData.append('is_permanent', isPermanent ? '1' : '0');
     
     // Convert permissions to the format expected by the API
     const apiPermissions = [
@@ -80,6 +87,9 @@ export const UploadFileDialog = ({ open, onOpenChange }: UploadFileDialogProps) 
       setTitle("");
       setDescription("");
       setFile(null);
+      setStartDate("");
+      setEndDate("");
+      setIsPermanent(false);
       setSelectedUsers([]);
       setSelectedGroups([]);
       setSelectedCategories([]);
@@ -192,6 +202,64 @@ export const UploadFileDialog = ({ open, onOpenChange }: UploadFileDialogProps) 
                   placeholder="Descreva o conteúdo do arquivo (opcional)"
                   rows={3}
                 />
+              </div>
+
+              {/* Validity Period */}
+              <div className="space-y-4">
+                <div>
+                  <Label>Período de Vigência</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Defina quando o arquivo deve estar disponível
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="permanent"
+                    checked={isPermanent}
+                    onCheckedChange={(checked) => {
+                      setIsPermanent(checked as boolean);
+                      if (checked) {
+                        setStartDate("");
+                        setEndDate("");
+                      }
+                    }}
+                  />
+                  <Label htmlFor="permanent" className="text-sm">
+                    Arquivo permanente (sempre disponível)
+                  </Label>
+                </div>
+
+                {!isPermanent && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="start-date">Data de Início</Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="start-date"
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          className="pl-8"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="end-date">Data de Vencimento</Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="end-date"
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          className="pl-8"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
