@@ -78,7 +78,7 @@ class AuthSecurity {
      * Enhanced rate limiting for critical operations
      */
     public function checkCriticalRateLimit($user_id, $action, $max_attempts = 3, $time_window = 300) {
-        $rate_limiter = new RateLimiter();
+        $rate_limiter = new RateLimiter($this->db);
         $ip = $_SERVER['REMOTE_ADDR'];
         
         // Check both IP and user-based rate limiting
