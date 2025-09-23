@@ -182,10 +182,6 @@ export default function Profile() {
             <span className="text-muted-foreground">Última atualização:</span>
             <span>Não disponível</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">ID do usuário:</span>
-            <span className="font-mono text-sm">{user?.id?.slice(0, 8)}...</span>
-          </div>
         </CardContent>
       </Card>
     </div>
