@@ -56,8 +56,6 @@ export function AppSidebar() {
       className={isCollapsed ? "w-14" : "w-60"}
       collapsible="icon"
     >
-      <SidebarTrigger className="m-2 self-end" />
-
       {/* Logo Section */}
       <div className="p-4 border-b border-sidebar-border flex justify-center items-center">
         {isCollapsed ? (
