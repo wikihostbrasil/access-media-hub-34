@@ -127,6 +127,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $delete_stmt->execute();
         }
         
+        // Determine if user_groups.id is auto-increment numeric or UUID string
+        $schemaStmt = $db->query("SELECT DATABASE()");
+        $currentSchema = $schemaStmt->fetchColumn();
+        $colInfoStmt = $db->prepare("SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, EXTRA FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = 'user_groups' AND COLUMN_NAME = 'id'");
+        $colInfoStmt->bindParam(":schema", $currentSchema);
+        $colInfoStmt->execute();
+        $col = $colInfoStmt->fetch(PDO::FETCH_ASSOC);
+        $extra = strtolower($col['EXTRA'] ?? '');
+        $dataType = strtolower($col['DATA_TYPE'] ?? '');
+        $isNumericId = in_array($dataType, ['int','bigint','mediumint','smallint','tinyint']);
+        $useAutoId = $isNumericId || strpos($extra, 'auto_increment') !== false;
+        
         if ($action === 'set' || $action === 'add') {
             // Add new members
             foreach ($user_ids as $user_id) {
@@ -143,14 +155,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     }
                 }
                 
-                $uuid = generateUUID();
-                $insert_query = "INSERT INTO user_groups (id, group_id, user_id, added_by, created_at) VALUES (:id, :group_id, :user_id, :added_by, NOW())";
-                $insert_stmt = $db->prepare($insert_query);
-                $insert_stmt->bindParam(":id", $uuid);
-                $insert_stmt->bindParam(":group_id", $group_id);
-                $insert_stmt->bindParam(":user_id", $user_id);
-                $insert_stmt->bindParam(":added_by", $user_data['id']);
-                $insert_stmt->execute();
+                if ($useAutoId) {
+                    $insert_query = "INSERT INTO user_groups (group_id, user_id, added_by, created_at) VALUES (:group_id, :user_id, :added_by, NOW())";
+                    $insert_stmt = $db->prepare($insert_query);
+                    $insert_stmt->bindParam(":group_id", $group_id);
+                    $insert_stmt->bindParam(":user_id", $user_id);
+                    $insert_stmt->bindParam(":added_by", $user_data['id']);
+                    $insert_stmt->execute();
+                } else {
+                    $uuid = generateUUID();
+                    $insert_query = "INSERT INTO user_groups (id, group_id, user_id, added_by, created_at) VALUES (:id, :group_id, :user_id, :added_by, NOW())";
+                    $insert_stmt = $db->prepare($insert_query);
+                    $insert_stmt->bindParam(":id", $uuid);
+                    $insert_stmt->bindParam(":group_id", $group_id);
+                    $insert_stmt->bindParam(":user_id", $user_id);
+                    $insert_stmt->bindParam(":added_by", $user_data['id']);
+                    $insert_stmt->execute();
+                }
             }
         } else if ($action === 'remove') {
             // Remove specific members
