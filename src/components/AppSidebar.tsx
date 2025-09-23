@@ -62,7 +62,7 @@ export function AppSidebar() {
           <img 
             src="https://dummyimage.com/50x50/ddd/006DD9&text=L" 
             alt="Logo"
-            className="w-8 h-8"
+            className="w-4 h-4"
           />
         ) : (
           <img 
