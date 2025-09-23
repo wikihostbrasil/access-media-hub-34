@@ -9,6 +9,9 @@ import { Calendar, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { CategorySearchSelect } from "@/components/CategorySearchSelect";
+import { GroupSearchSelect } from "@/components/GroupSearchSelect";
+import { UserSearchSelect } from "@/components/UserSearchSelect";
 
 interface EditFileDialogProps {
   open: boolean;
@@ -32,6 +35,10 @@ export const EditFileDialog = ({ open, onOpenChange, file }: EditFileDialogProps
   const [isPermanent, setIsPermanent] = useState(false);
   const [status, setStatus] = useState("active");
   const [loading, setLoading] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -44,8 +51,28 @@ export const EditFileDialog = ({ open, onOpenChange, file }: EditFileDialogProps
       setEndDate(file.end_date ? file.end_date.split('T')[0] : "");
       setIsPermanent(file.is_permanent || false);
       setStatus(file.status || "active");
+      
+      // Load file permissions
+      loadFilePermissions(file.id);
     }
   }, [file]);
+
+  const loadFilePermissions = async (fileId: string) => {
+    setPermissionsLoading(true);
+    try {
+      const response: any = await apiClient.request(`/api/files/permissions.php?file_id=${fileId}`);
+      if (response.data) {
+        const permissions = response.data;
+        setSelectedUsers(permissions.filter((p: any) => p.user_id).map((p: any) => p.user_id));
+        setSelectedGroups(permissions.filter((p: any) => p.group_id).map((p: any) => p.group_id));
+        setSelectedCategories(permissions.filter((p: any) => p.category_id).map((p: any) => p.category_id));
+      }
+    } catch (error) {
+      console.error('Error loading file permissions:', error);
+    } finally {
+      setPermissionsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +92,12 @@ export const EditFileDialog = ({ open, onOpenChange, file }: EditFileDialogProps
           start_date: isPermanent ? null : (startDate || null),
           end_date: isPermanent ? null : (endDate || null),
           is_permanent: isPermanent,
-          status: status
+          status: status,
+          permissions: [
+            ...selectedUsers.map(id => ({ user_id: id })),
+            ...selectedGroups.map(id => ({ group_id: id })),
+            ...selectedCategories.map(id => ({ category_id: id }))
+          ]
         })
       });
 
@@ -194,6 +226,35 @@ export const EditFileDialog = ({ open, onOpenChange, file }: EditFileDialogProps
                         />
                       </div>
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Permissions */}
+              <div className="space-y-4">
+                <div>
+                  <Label>Permissões de Acesso</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Selecione usuários, grupos ou categorias que podem acessar este arquivo
+                  </p>
+                </div>
+
+                {permissionsLoading ? (
+                  <div className="text-sm text-muted-foreground">Carregando permissões...</div>
+                ) : (
+                  <div className="space-y-4">
+                    <UserSearchSelect
+                      selectedUsers={selectedUsers}
+                      onSelectionChange={setSelectedUsers}
+                    />
+                    <GroupSearchSelect
+                      selectedGroups={selectedGroups}
+                      onSelectionChange={setSelectedGroups}
+                    />
+                    <CategorySearchSelect
+                      selectedCategories={selectedCategories}
+                      onSelectionChange={setSelectedCategories}
+                    />
                   </div>
                 )}
               </div>

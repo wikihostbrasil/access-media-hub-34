@@ -54,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         $endDate = !empty($data['end_date']) ? $data['end_date'] : null;
         $isPermanent = isset($data['is_permanent']) && $data['is_permanent'];
         $status = isset($data['status']) ? $data['status'] : 'active';
+        $permissions = isset($data['permissions']) ? $data['permissions'] : [];
 
         // If permanent, clear dates
         if ($isPermanent) {
@@ -101,7 +102,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             $fileId
         ]);
 
-        if ($updateStmt->rowCount() > 0) {
+        // Update permissions if provided
+        if (!empty($permissions)) {
+            // Delete existing permissions
+            $deletePermQuery = "DELETE FROM file_permissions WHERE file_id = ?";
+            $deletePermStmt = $db->prepare($deletePermQuery);
+            $deletePermStmt->execute([$fileId]);
+            
+            // Insert new permissions
+            $insertPermQuery = "INSERT INTO file_permissions (id, file_id, user_id, group_id, category_id, created_at) 
+                               VALUES (:id, :file_id, :user_id, :group_id, :category_id, NOW())";
+            $insertPermStmt = $db->prepare($insertPermQuery);
+            
+            foreach ($permissions as $permission) {
+                $permId = bin2hex(random_bytes(16));
+                $insertPermStmt->bindParam(":id", $permId);
+                $insertPermStmt->bindParam(":file_id", $fileId);
+                $insertPermStmt->bindValue(":user_id", $permission['user_id'] ?? null);
+                $insertPermStmt->bindValue(":group_id", $permission['group_id'] ?? null);
+                $insertPermStmt->bindValue(":category_id", $permission['category_id'] ?? null);
+                $insertPermStmt->execute();
+            }
+        }
+
+        if ($updateStmt->rowCount() > 0 || !empty($permissions)) {
             http_response_code(200);
             echo json_encode(array(
                 "message" => "Arquivo atualizado com sucesso",
