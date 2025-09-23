@@ -25,7 +25,7 @@ if (!$user_data) {
 
 try {
     // Get current user data from database (source of truth)
-    $query = "SELECT u.id, u.email, u.active, p.full_name, p.role 
+    $query = "SELECT u.id, u.email, COALESCE(p.active, 1) AS active, p.full_name, p.role 
               FROM users u 
               LEFT JOIN profiles p ON u.id = p.user_id 
               WHERE u.id = :user_id";
