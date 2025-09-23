@@ -19,7 +19,15 @@ export const useUsers = () => {
   return useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      return apiClient.getUsers() as Promise<UserProfile[]>;
+      console.log('🔍 Fetching users...');
+      try {
+        const result = await apiClient.getUsers();
+        console.log('✅ Users fetched successfully:', result);
+        return result as UserProfile[];
+      } catch (error) {
+        console.error('❌ Error fetching users:', error);
+        throw error;
+      }
     },
   });
 };

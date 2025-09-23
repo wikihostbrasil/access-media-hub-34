@@ -46,13 +46,17 @@ export default function Profile() {
     e.preventDefault();
     setSaving(true);
     
+    console.log('🔄 Updating profile with data:', formData);
+    
     try {
-      await apiClient.updateProfile(formData);
+      const result = await apiClient.updateProfile(formData);
+      console.log('✅ Profile updated successfully:', result);
       toast({
         title: "Perfil atualizado",
         description: "Suas informações foram salvas com sucesso!",
       });
     } catch (error: any) {
+      console.error('❌ Error updating profile:', error);
       toast({
         title: "Erro",
         description: `Erro ao atualizar perfil: ${error.message}`,
