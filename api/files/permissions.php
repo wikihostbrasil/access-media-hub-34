@@ -22,7 +22,7 @@ if (!$jwt->validateToken($token)) {
 }
 
 $decoded = $jwt->validateToken($token);
-$userId = $decoded['user_id'];
+$userId = $decoded['id'];
 
 // Get user role
 $roleQuery = "SELECT role FROM profiles WHERE user_id = ?";

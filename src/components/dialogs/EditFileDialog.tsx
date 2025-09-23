@@ -60,7 +60,7 @@ export const EditFileDialog = ({ open, onOpenChange, file }: EditFileDialogProps
   const loadFilePermissions = async (fileId: string) => {
     setPermissionsLoading(true);
     try {
-      const response: any = await apiClient.request(`/api/files/permissions.php?file_id=${fileId}`);
+      const response: any = await apiClient.request(`/files/permissions.php?file_id=${fileId}`);
       if (response.data) {
         const permissions = response.data;
         setSelectedUsers(permissions.filter((p: any) => p.user_id).map((p: any) => p.user_id));
@@ -80,7 +80,7 @@ export const EditFileDialog = ({ open, onOpenChange, file }: EditFileDialogProps
 
     setLoading(true);
     try {
-      await apiClient.request(`/api/files/update.php`, {
+      await apiClient.request(`/files/update.php`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
