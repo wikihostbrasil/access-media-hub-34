@@ -5,6 +5,17 @@ include_once '../config/jwt.php';
 include_once '../config/security.php';
 include_once '../config/auth-security.php';
 
+// UUID generation function
+function generateUUID() {
+    return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+        mt_rand(0, 0xffff),
+        mt_rand(0, 0x0fff) | 0x4000,
+        mt_rand(0, 0x3fff) | 0x8000,
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+    );
+}
+
 $database = new Database();
 $db = $database->getConnection();
 $jwt = new JWTHandler();
@@ -132,10 +143,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     }
                 }
                 
-                $insert_query = "INSERT INTO user_groups (group_id, user_id, created_at) VALUES (:group_id, :user_id, NOW())";
+                $uuid = generateUUID();
+                $insert_query = "INSERT INTO user_groups (id, group_id, user_id, added_by, created_at) VALUES (:id, :group_id, :user_id, :added_by, NOW())";
                 $insert_stmt = $db->prepare($insert_query);
+                $insert_stmt->bindParam(":id", $uuid);
                 $insert_stmt->bindParam(":group_id", $group_id);
                 $insert_stmt->bindParam(":user_id", $user_id);
+                $insert_stmt->bindParam(":added_by", $user_data['id']);
                 $insert_stmt->execute();
             }
         } else if ($action === 'remove') {
