@@ -75,7 +75,7 @@ try {
     
     // Update user active status if provided
     if ($active !== null) {
-        $query = "UPDATE users SET active = :active WHERE id = :user_id";
+        $query = "UPDATE profiles SET active = :active WHERE user_id = :user_id";
         $stmt = $db->prepare($query);
         $stmt->bindParam(":active", $active, PDO::PARAM_BOOL);
         $stmt->bindParam(":user_id", $user_id);

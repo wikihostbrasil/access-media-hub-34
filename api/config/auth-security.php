@@ -14,7 +14,7 @@ class AuthSecurity {
      * Never trust JWT role for critical operations
      */
     public function revalidateUserRole($user_id) {
-        $query = "SELECT u.active, p.role FROM users u 
+        $query = "SELECT p.active, p.role FROM users u 
                   LEFT JOIN profiles p ON u.id = p.user_id 
                   WHERE u.id = :user_id";
         $stmt = $this->db->prepare($query);
