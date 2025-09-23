@@ -3,10 +3,12 @@ include_once '../config/cors.php';
 include_once '../config/database.php';
 include_once '../config/jwt.php';
 include_once '../config/security.php';
+include_once '../config/auth-security.php';
 
 $database = new Database();
 $db = $database->getConnection();
 $jwt = new JWTHandler();
+$auth_security = new AuthSecurity($db);
 
 // Validate token
 $token = $jwt->getBearerToken();
@@ -24,8 +26,17 @@ if (!$user_data) {
 }
 
 try {
-    // Get current user data from database (source of truth)
-    $query = "SELECT u.id, u.email, COALESCE(p.active, 1) AS active, p.full_name, p.role 
+    // Use AuthSecurity for consistent role revalidation
+    $role = $auth_security->revalidateUserRole($user_data['id']);
+    
+    if (!$role) {
+        http_response_code(401);
+        echo json_encode(array("error" => "Usuário inativo ou não encontrado"));
+        exit();
+    }
+    
+    // Get user details for response
+    $query = "SELECT u.id, u.email, p.full_name 
               FROM users u 
               LEFT JOIN profiles p ON u.id = p.user_id 
               WHERE u.id = :user_id";
@@ -41,19 +52,13 @@ try {
         exit();
     }
     
-    if (!$user['active']) {
-        http_response_code(403);
-        echo json_encode(array("error" => "Usuário inativo"));
-        exit();
-    }
-    
     // Return current user role and data from database
     http_response_code(200);
     echo json_encode(array(
         "id" => $user['id'],
         "email" => $user['email'],
         "full_name" => $user['full_name'] ?? $user['email'],
-        "role" => $user['role'] ?? 'user'
+        "role" => $role ?? 'user'
     ));
     
 } catch (Exception $e) {
