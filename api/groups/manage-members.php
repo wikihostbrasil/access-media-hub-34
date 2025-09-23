@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode(array("error" => "Erro ao buscar membros do grupo"));
+        echo json_encode(array("error" => "Erro ao buscar membros do grupo", "details" => $e->getMessage()));
     }
     
 } else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     } catch (Exception $e) {
         $db->rollback();
         http_response_code(500);
-        echo json_encode(array("error" => "Erro ao atualizar membros do grupo"));
+        echo json_encode(array("error" => "Erro ao atualizar membros do grupo", "details" => $e->getMessage(), "trace" => $e->getTraceAsString()));
     }
 }
 ?>
