@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { User, Mail, Phone, Bell, Save } from "lucide-react";
 import { useApiAuth } from "@/hooks/useApiAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -30,16 +31,37 @@ export default function Profile() {
     receive_notifications: true,
   });
   const [saving, setSaving] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
-  // Initialize form with user data
+  // Load complete profile data including WhatsApp
   useEffect(() => {
-    if (user) {
-      setFormData({
-        full_name: user.full_name || "",
-        whatsapp: "", // This would need to be implemented in PHP backend
-        receive_notifications: true,
-      });
-    }
+    const loadProfile = async () => {
+      if (user) {
+        setLoadingProfile(true);
+        try {
+          const profile = await apiClient.getProfile();
+          console.log('📋 Profile loaded:', profile);
+          
+          setFormData({
+            full_name: profile.full_name || "",
+            whatsapp: profile.whatsapp || "",
+            receive_notifications: profile.receive_notifications ?? true,
+          });
+        } catch (error) {
+          console.error('❌ Error loading profile:', error);
+          // Fallback to user data from token
+          setFormData({
+            full_name: user.full_name || "",
+            whatsapp: "",
+            receive_notifications: true,
+          });
+        } finally {
+          setLoadingProfile(false);
+        }
+      }
+    };
+    
+    loadProfile();
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,13 +123,17 @@ export default function Profile() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="full_name">Nome Completo</Label>
-              <Input
-                id="full_name"
-                value={formData.full_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-                placeholder="Seu nome completo"
-                required
-              />
+              {loadingProfile ? (
+                <Skeleton className="h-10 w-full" />
+              ) : (
+                <Input
+                  id="full_name"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                  placeholder="Seu nome completo"
+                  required
+                />
+              )}
             </div>
 
             <div className="space-y-2">
@@ -125,12 +151,16 @@ export default function Profile() {
 
             <div className="space-y-2">
               <Label htmlFor="whatsapp">WhatsApp</Label>
-              <Input
-                id="whatsapp"
-                value={formData.whatsapp}
-                onChange={(e) => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
-                placeholder="(11) 99999-9999"
-              />
+              {loadingProfile ? (
+                <Skeleton className="h-10 w-full" />
+              ) : (
+                <Input
+                  id="whatsapp"
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
+                  placeholder="(11) 99999-9999"
+                />
+              )}
             </div>
 
             <Separator />
@@ -156,7 +186,7 @@ export default function Profile() {
             </div>
 
             <div className="flex gap-4 pt-4">
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving || loadingProfile}>
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? "Salvando..." : "Salvar Alterações"}
               </Button>
