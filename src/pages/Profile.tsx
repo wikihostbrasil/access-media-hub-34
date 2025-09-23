@@ -127,7 +127,8 @@ export default function Profile() {
               <Label htmlFor="whatsapp">WhatsApp</Label>
               <Input
                 id="whatsapp"
-                value={formData.whatsapp}
+                //value={formData.whatsapp}
+                value={user?.whatsapp || ""}
                 onChange={(e) => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
                 placeholder="(11) 99999-9999"
               />
