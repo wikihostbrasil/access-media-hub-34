@@ -53,7 +53,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={isCollapsed ? "w-14" : "w-60"}
+      className={isCollapsed ? "w-18" : "w-60"}
       collapsible="icon"
     >
       {/* Logo Section */}
