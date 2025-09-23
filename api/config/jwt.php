@@ -1,7 +1,71 @@
 <?php
-require_once 'vendor/autoload.php';
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
+// Try to load Composer autoloader with fallback
+$autoloader_path = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($autoloader_path)) {
+    require_once $autoloader_path;
+    use Firebase\JWT\JWT;
+    use Firebase\JWT\Key;
+} else {
+    // If composer dependencies are not installed, use a simple JWT implementation
+    // This is a fallback for development/testing
+    class JWT {
+        public static function encode($payload, $key, $alg = 'HS256') {
+            $header = json_encode(['typ' => 'JWT', 'alg' => $alg]);
+            $payload = json_encode($payload);
+            
+            $base64Header = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
+            $base64Payload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
+            
+            $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, $key, true);
+            $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+            
+            return $base64Header . "." . $base64Payload . "." . $base64Signature;
+        }
+        
+        public static function decode($jwt, $key) {
+            $parts = explode('.', $jwt);
+            if (count($parts) != 3) {
+                throw new Exception('Invalid JWT format');
+            }
+            
+            list($base64Header, $base64Payload, $base64Signature) = $parts;
+            
+            $header = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $base64Header)), true);
+            $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $base64Payload)), true);
+            
+            $signature = base64_decode(str_replace(['-', '_'], ['+', '/'], $base64Signature));
+            $expectedSignature = hash_hmac('sha256', $base64Header . "." . $base64Payload, $key->getKey(), true);
+            
+            if (!hash_equals($signature, $expectedSignature)) {
+                throw new Exception('Invalid JWT signature');
+            }
+            
+            if (isset($payload['exp']) && $payload['exp'] < time()) {
+                throw new Exception('JWT token expired');
+            }
+            
+            return (object)$payload;
+        }
+    }
+    
+    class Key {
+        private $key;
+        private $algorithm;
+        
+        public function __construct($key, $algorithm) {
+            $this->key = $key;
+            $this->algorithm = $algorithm;
+        }
+        
+        public function getKey() {
+            return $this->key;
+        }
+        
+        public function getAlgorithm() {
+            return $this->algorithm;
+        }
+    }
+}
 
 class JWTHandler {
     private $secret_key;
