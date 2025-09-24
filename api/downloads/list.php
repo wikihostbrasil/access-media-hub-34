@@ -32,7 +32,7 @@ if ($user_role === 'user') {
 }
 
 try {
-    $query = "SELECT d.*, f.title as file_title, f.filename, p.full_name as user_name
+    $query = "SELECT d.*, f.title as file_title, f.file_url, f.file_size, f.file_type, p.full_name as user_name
               FROM downloads d 
               LEFT JOIN files f ON d.file_id = f.id 
               LEFT JOIN profiles p ON d.user_id = p.user_id 

@@ -7,7 +7,9 @@ export interface DownloadWithDetails {
   file_id: string;
   downloaded_at: string;
   file_title?: string;
-  filename?: string;
+  file_url?: string;
+  file_size?: number;
+  file_type?: string;
   user_name?: string;
 }
 

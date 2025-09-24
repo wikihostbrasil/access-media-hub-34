@@ -158,10 +158,10 @@ const Downloads = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">
-                      {getFileType(download.filename || download.file_title || '')}
+                      {getFileType(download.file_url || download.file_title || '')}
                     </Badge>
                   </TableCell>
-                  <TableCell>N/A</TableCell>
+                  <TableCell>{formatFileSize(download.file_size)}</TableCell>
                   <TableCell>
                     <div>
                       <div>
