@@ -140,12 +140,12 @@ const Files = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Arquivo</TableHead>
-                <TableHead>Tipo</TableHead>
                 <TableHead>Tamanho</TableHead>
                 {user?.role === 'admin' && <TableHead>Downloads</TableHead>}
                 <TableHead>Enviado por</TableHead>
                 {user?.role === 'admin' && <TableHead>Data Upload</TableHead>}
-                <TableHead>Datas Vigência</TableHead>
+                <TableHead>Início</TableHead>
+                <TableHead>Término</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
@@ -165,11 +165,6 @@ const Files = () => {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {getFileExtension(file.title)}
-                      </Badge>
-                    </TableCell>
                     <TableCell>{formatFileSize(file.file_size)}</TableCell>
                     {user?.role === 'admin' && (
                       <TableCell>
@@ -185,14 +180,18 @@ const Files = () => {
                     <TableCell>
                       <div className="text-xs">
                         {file.start_date && (
-                          <div>Início: {format(new Date(file.start_date), "dd/MM/yyyy", { locale: ptBR })}</div>
+                          <div>{format(new Date(file.start_date), "dd/MM/yyyy", { locale: ptBR })}</div>
                         )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-xs">
                         {file.end_date && (
-                          <div>Fim: {format(new Date(file.end_date), "dd/MM/yyyy", { locale: ptBR })}</div>
+                          <div>{format(new Date(file.end_date), "dd/MM/yyyy", { locale: ptBR })}</div>
                         )}
                         {file.is_permanent && <div className="text-green-600">Permanente</div>}
                       </div>
-                    </TableCell>
+                    </TableCell>                    
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <Badge variant={file.status === 'active' ? 'default' : 'secondary'}>
