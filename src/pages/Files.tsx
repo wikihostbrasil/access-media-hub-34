@@ -194,10 +194,10 @@ const Files = () => {
                     </TableCell>                    
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <Badge className="w-full text-center" variant={file.status === 'active' ? 'default' : 'secondary'}>
+                        <Badge variant={file.status === 'active' ? 'default' : 'secondary'}>
                           {file.status === 'active' ? 'Ativo' : file.status === 'inactive' ? 'Inativo' : 'Arquivado'}
                         </Badge>
-                        {file.deleted_at && <Badge className="w-full text-center" variant="destructive">Excluído</Badge>}
+                        {file.deleted_at && <Badge variant="destructive">Excluído</Badge>}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -205,7 +205,7 @@ const Files = () => {
                         {user?.role === 'admin' && (
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => handleShowDownloads(file.id, file.title)}
                           >
                             <BarChart3 className="h-3 w-3" />
